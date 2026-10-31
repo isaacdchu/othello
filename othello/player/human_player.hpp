@@ -10,7 +10,11 @@ namespace othello::player {
 
 class HumanPlayer : public Player {
 public:
-    HumanPlayer() = default;
+    HumanPlayer(othello::Color color) :
+    Player(color)
+    {
+        //
+    }
     ~HumanPlayer() override = default;
 
     uint64_t get_move(const othello::board::Board& board) override {
