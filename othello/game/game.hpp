@@ -28,7 +28,8 @@ public:
     player_black_(std::move(player_black)),
     player_white_(std::move(player_white))
     {
-        //
+        player_black_->set_color(othello::Color::BLACK);
+        player_white_->set_color(othello::Color::WHITE);
     }
 
     void run() {

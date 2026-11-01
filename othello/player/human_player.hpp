@@ -10,8 +10,8 @@ namespace othello::player {
 
 class HumanPlayer : public Player {
 public:
-    HumanPlayer(othello::Color color) :
-    Player(color)
+    HumanPlayer() :
+    Player()
     {
         //
     }

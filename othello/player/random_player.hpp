@@ -12,8 +12,8 @@ class RandomPlayer : public Player {
 private:
     std::mt19937 rng;
 public:
-    RandomPlayer(othello::Color color) :
-    Player(color),
+    RandomPlayer() :
+    Player(),
     rng(0)
     {
         //
