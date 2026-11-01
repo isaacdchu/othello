@@ -18,5 +18,5 @@ add_executable(main main.cpp)
 target_link_libraries(main PRIVATE othello)
 target_compile_options(main PRIVATE -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Werror -O2)
 
-# enable_testing()
-# add_subdirectory(tests)
+enable_testing()
+add_subdirectory(tests)

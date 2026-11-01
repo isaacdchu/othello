@@ -17,7 +17,7 @@ public:
     }
     virtual ~Player() = default;
 
-    virtual uint64_t get_move(const othello::board::Board& board);
+    virtual uint64_t get_move(const othello::board::Board& board) = 0;
 
     void set_color(othello::Color color) {
         color_ = color;
