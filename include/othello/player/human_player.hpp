@@ -1,10 +1,10 @@
-#ifndef HUMAN_PLAYER_HPP
-#define HUMAN_PLAYER_HPP
+#ifndef OTHELLO_HUMAN_PLAYER_HPP
+#define OTHELLO_HUMAN_PLAYER_HPP
 
 #include <iostream>
 
 #include "player.hpp"
-#include "util/util.hpp"
+#include "../util/util.hpp"
 
 namespace othello::player {
 
@@ -27,4 +27,4 @@ public:
 
 } // namespace othello::player
 
-#endif // HUMAN_PLAYER_HPP
+#endif // OTHELLO_HUMAN_PLAYER_HPP

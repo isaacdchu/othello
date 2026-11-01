@@ -1,5 +1,5 @@
-#ifndef UTIL_HPP
-#define UTIL_HPP
+#ifndef OTHELLO_UTIL_HPP
+#define OTHELLO_UTIL_HPP
 
 #include <bit>
 #include <cstdint>
@@ -46,4 +46,4 @@ inline std::string move_to_string(uint64_t move) {
 
 } // namespace othello::util
 
-#endif // UTIL_HPP
+#endif // OTHELLO_UTIL_HPP

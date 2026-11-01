@@ -1,5 +1,5 @@
-#ifndef PLAYER_HPP
-#define PLAYER_HPP
+#ifndef OTHELLO_PLAYER_HPP
+#define OTHELLO_PLAYER_HPP
 
 #include <cstddef>
 #include <cstdint>
@@ -30,4 +30,4 @@ public:
 
 } // namespace othello::player
 
-#endif // PLAYER_HPP
+#endif // OTHELLO_PLAYER_HPP

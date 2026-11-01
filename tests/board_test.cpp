@@ -8,9 +8,9 @@
 #include <string>
 #include <utility>
 
-#include "board/board.hpp"
+#include <othello/board/board.hpp>
 #include "test_helpers.hpp"
-#include "util/util.hpp"
+#include <othello/util/util.hpp>
 
 using othello::Color;
 using othello::board::Board;

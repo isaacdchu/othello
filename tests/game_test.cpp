@@ -8,12 +8,12 @@
 #include <utility>
 #include <vector>
 
-#include "board/board.hpp"
-#include "game/game.hpp"
-#include "player/player.hpp"
-#include "player/random_player.hpp"
+#include <othello/board/board.hpp>
+#include <othello/game/game.hpp>
+#include <othello/player/player.hpp>
+#include <othello/player/random_player.hpp>
 #include "test_helpers.hpp"
-#include "util/util.hpp"
+#include <othello/util/util.hpp>
 
 using othello::Color;
 using othello::game::Game;

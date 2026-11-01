@@ -1,5 +1,5 @@
-#ifndef GAME_HPP
-#define GAME_HPP
+#ifndef OTHELLO_GAME_HPP
+#define OTHELLO_GAME_HPP
 
 #include <cstdint>
 #include <iostream>
@@ -74,4 +74,4 @@ public:
 
 } // namespace othello::game
 
-#endif // GAME_HPP
+#endif // OTHELLO_GAME_HPP

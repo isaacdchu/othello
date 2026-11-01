@@ -1,5 +1,5 @@
-#ifndef BOARD_HPP
-#define BOARD_HPP
+#ifndef OTHELLO_BOARD_HPP
+#define OTHELLO_BOARD_HPP
 
 #include <bit>
 #include <cstddef>
@@ -22,15 +22,15 @@ Therefore, the second MSB is b1
 ...
 */
 
-// d5, e4
-static constexpr uint64_t START_BLACK = 0x0000000810000000;
-// d4, e5
-static constexpr uint64_t START_WHITE = 0x0000001008000000;
-
-static constexpr uint64_t FILE_A = 0x8080808080808080ULL;
-static constexpr uint64_t FILE_H = 0x0101010101010101ULL;
-
 namespace othello::board {
+
+// d5, e4
+inline constexpr uint64_t START_BLACK = 0x0000000810000000;
+// d4, e5
+inline constexpr uint64_t START_WHITE = 0x0000001008000000;
+
+inline constexpr uint64_t FILE_A = 0x8080808080808080ULL;
+inline constexpr uint64_t FILE_H = 0x0101010101010101ULL;
 
 class Board {
 private:
@@ -206,4 +206,4 @@ public:
 
 } // namespace othello::board
 
-#endif // BOARD_HPP
+#endif // OTHELLO_BOARD_HPP

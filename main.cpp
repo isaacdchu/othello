@@ -1,7 +1,7 @@
 #include <iostream>
 #include <print>
 
-#include <othello>
+#include <othello/othello.hpp>
 
 int main() {
     othello::game::Game game(

@@ -1,5 +1,5 @@
-#ifndef RANDOM_PLAYER_HPP
-#define RANDOM_PLAYER_HPP
+#ifndef OTHELLO_RANDOM_PLAYER_HPP
+#define OTHELLO_RANDOM_PLAYER_HPP
 
 #include <bit>
 #include <random>
@@ -33,4 +33,4 @@ public:
 
 } // namespace othello::player
 
-#endif // RANDOM_PLAYER_HPP
+#endif // OTHELLO_RANDOM_PLAYER_HPP

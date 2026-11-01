@@ -14,7 +14,7 @@ add_executable(othello_tests
     game_test.cpp
     util_test.cpp
 )
-target_link_libraries(othello_tests PRIVATE othello GTest::gtest_main)
+target_link_libraries(othello_tests PRIVATE othello::othello GTest::gtest_main)
 target_compile_options(othello_tests PRIVATE -Wall -Wextra -Werror)
 
 include(GoogleTest)

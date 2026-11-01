@@ -5,8 +5,8 @@
 #include <initializer_list>
 #include <string_view>
 
-#include "board/board.hpp"
-#include "util/util.hpp"
+#include <othello/board/board.hpp>
+#include <othello/util/util.hpp>
 
 namespace othello::test {
 

@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "util/util.hpp"
+#include <othello/util/util.hpp>
 
 using othello::util::move_to_string;
 using othello::util::parse_move;
