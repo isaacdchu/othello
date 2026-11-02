@@ -15,7 +15,6 @@ public:
     {
         //
     }
-    ~HumanPlayer() override = default;
 
     uint64_t get_move(const othello::board::Board& board) override {
         std::cout << "Enter your move: ";

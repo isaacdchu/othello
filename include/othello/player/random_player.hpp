@@ -18,7 +18,6 @@ public:
     {
         //
     }
-    ~RandomPlayer() override = default;
 
     uint64_t get_move(const othello::board::Board& board) override {
         // moves are single-bit bitboards, not square indices
