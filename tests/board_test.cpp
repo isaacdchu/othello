@@ -6,6 +6,7 @@
 #include <random>
 #include <sstream>
 #include <string>
+#include <unordered_set>
 #include <utility>
 
 #include <othello/board/board.hpp>
@@ -225,6 +226,32 @@ TEST(Board, GameIsNotOverBeforeFinalMove) {
     EXPECT_FALSE(board.game_over());
     EXPECT_EQ(board.turn(), Color::BLACK);
     EXPECT_TRUE(board.move_valid(parse_move("c5")));
+}
+
+TEST(Board, EqualBoardsHashEqually) {
+    Board a;
+    Board b;
+    EXPECT_EQ(a, b);
+    EXPECT_EQ(a.hash(), b.hash());
+    EXPECT_EQ(std::hash<Board>{}(a), a.hash());
+
+    // the same position reached through two different move orders
+    ASSERT_TRUE(play(a, {"e6", "f6", "f5", "d6"}));
+    ASSERT_TRUE(play(b, {"f5", "f6", "e6", "d6"}));
+    ASSERT_EQ(a, b);
+    EXPECT_EQ(a.hash(), b.hash());
+}
+
+TEST(Board, DifferentPositionsHashDifferently) {
+    std::unordered_set<Board> seen;
+    for (auto opening : {"d3", "c4", "f5", "e6"}) {
+        Board board;
+        board.make_move(parse_move(opening));
+        seen.insert(board);
+    }
+    seen.insert(Board{});
+    EXPECT_EQ(seen.size(), 5u);
+    EXPECT_TRUE(seen.contains(Board{}));
 }
 
 // Plays many random games and checks every position against the naive

@@ -44,6 +44,17 @@ inline std::string move_to_string(uint64_t move) {
     ) + std::string(1, static_cast<char>('1' + row));
 }
 
+// splitmix64 finalizer: spreads every input bit across the whole output.
+// Useful as a building block for hashing bitboards.
+constexpr uint64_t mix(uint64_t x) {
+    x ^= x >> 30;
+    x *= 0xBF58476D1CE4E5B9ULL;
+    x ^= x >> 27;
+    x *= 0x94D049BB133111EBULL;
+    x ^= x >> 31;
+    return x;
+}
+
 } // namespace othello::util
 
 #endif // OTHELLO_UTIL_HPP

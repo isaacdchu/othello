@@ -4,6 +4,7 @@
 #include <bit>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -73,6 +74,7 @@ private:
         }
         return moves;
     }
+
 public:
     Board() :
     black_(START_BLACK),
@@ -81,6 +83,39 @@ public:
     game_over_(false)
     {
         //
+    }
+
+    // Two boards are equal when they hold the same position: the same discs
+    // and the same side to move. game_over_ and passed_ are not compared;
+    // game_over_ follows from the position, and passed_ is move history.
+    bool operator==(const Board& other) const {
+        return (
+            (black_ == other.black_) &&
+            (white_ == other.white_) &&
+            (turn_ == other.turn_)
+        );
+    }
+
+    bool operator!=(const Board& other) const {
+        return !(*this == other);
+    }
+
+    uint64_t black() const {
+        return black_;
+    }
+
+    uint64_t white() const {
+        return white_;
+    }
+
+    // Hash of the position, consistent with operator==.
+    std::size_t hash() const noexcept {
+        uint64_t h = othello::util::mix(black_);
+        h = othello::util::mix(h ^ white_);
+        if (turn_ == othello::Color::WHITE) {
+            h = othello::util::mix(h ^ 0x9E3779B97F4A7C15ULL);
+        }
+        return static_cast<std::size_t>(h);
     }
 
     void make_move(uint64_t move) {
@@ -110,8 +145,10 @@ public:
 
     // Bitboard of every legal move for the player to move.
     uint64_t legal_moves() const {
-        return (turn_ == othello::Color::BLACK) ?
-            moves_for(black_, white_) : moves_for(white_, black_);
+        return (
+            (turn_ == othello::Color::BLACK) ?
+            moves_for(black_, white_) : moves_for(white_, black_)
+        );
     }
 
     // True if the opponent had to pass after the last move,
@@ -205,5 +242,12 @@ public:
 };
 
 } // namespace othello::board
+
+template <>
+struct std::hash<othello::board::Board> {
+    std::size_t operator()(const othello::board::Board& board) const noexcept {
+        return board.hash();
+    }
+};
 
 #endif // OTHELLO_BOARD_HPP
