@@ -12,9 +12,9 @@ class RandomPlayer : public Player {
 private:
     std::mt19937 rng;
 public:
-    RandomPlayer() :
+    RandomPlayer(int seed = 0) :
     Player(),
-    rng(0)
+    rng(seed)
     {
         //
     }
