@@ -151,6 +151,13 @@ public:
         );
     }
 
+    uint64_t legal_moves(othello::Color for_player) const {
+        return (
+            (for_player == othello::Color::BLACK) ?
+            moves_for(black_, white_) : moves_for(white_, black_)
+        );
+    }
+
     // True if the opponent had to pass after the last move,
     // so the same player is to move again.
     bool last_move_caused_pass() const {
