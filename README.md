@@ -16,7 +16,7 @@ With CMake `FetchContent`:
 include(FetchContent)
 FetchContent_Declare(othello
     GIT_REPOSITORY https://github.com/isaacdchu/othello.git
-    GIT_TAG v0.2.1
+    GIT_TAG v0.3.0
 )
 FetchContent_MakeAvailable(othello)
 
