@@ -5,6 +5,7 @@
 #include <iostream>
 #include <memory>
 #include <print>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -22,9 +23,10 @@ private:
 public:
     Game(
         std::unique_ptr<othello::player::Player> player_black,
-        std::unique_ptr<othello::player::Player> player_white
+        std::unique_ptr<othello::player::Player> player_white,
+        othello::board::Board board = othello::board::Board()
     ) :
-    board_(),
+    board_(board),
     player_black_(std::move(player_black)),
     player_white_(std::move(player_white))
     {

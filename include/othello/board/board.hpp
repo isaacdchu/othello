@@ -93,6 +93,16 @@ public:
     passed_(false)
     {
         // Initialize the board with the given position and turn.
+        if (legal_moves() == 0) {
+            // next player has no moves: they pass, and the turn comes back
+            turn_ = opponent(turn_);
+            if (legal_moves() == 0) {
+                // neither player can move
+                game_over_ = true;
+            } else {
+                passed_ = true;
+            }
+        }
     }
 
     // Two boards are equal when they hold the same position: the same discs

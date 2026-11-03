@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <memory>
 #include <regex>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -165,5 +166,122 @@ TEST(Game, WinnerMatchesFinalScore) {
         } else {
             EXPECT_TRUE(contains(out, "It's a draw!")) << out;
         }
+    }
+}
+
+namespace {
+
+std::unique_ptr<ScriptedPlayer> scripted(std::vector<std::string> moves) {
+    return std::make_unique<ScriptedPlayer>(std::move(moves));
+}
+
+// Runs run_silent and also returns whatever it printed.
+std::pair<int, std::string> run_silent_and_capture(Game& game) {
+    testing::internal::CaptureStdout();
+    int result = 0;
+    try {
+        result = game.run_silent();
+    } catch (...) {
+        testing::internal::GetCapturedStdout();
+        throw;
+    }
+    return {result, testing::internal::GetCapturedStdout()};
+}
+
+} // namespace
+
+TEST(GameRunSilent, BlackWinReturnsOneAndPrintsNothing) {
+    auto black = scripted({"e6", "e3", "g5", "e7", "c5"});
+    auto white = scripted({"f4", "f6", "d6", "f5"});
+    ScriptedPlayer* black_ptr = black.get();
+    ScriptedPlayer* white_ptr = white.get();
+
+    Game game(std::move(black), std::move(white));
+    const auto [result, out] = run_silent_and_capture(game);
+
+    EXPECT_EQ(result, 1);
+    EXPECT_EQ(out, "");
+    EXPECT_EQ(black_ptr->calls(), 5u);
+    EXPECT_EQ(white_ptr->calls(), 4u);
+}
+
+TEST(GameRunSilent, WhiteWinReturnsMinusOne) {
+    // black has no move here, so white is to move and wins with c1
+    othello::board::Board board(
+        othello::test::squares({"b1"}), othello::test::squares({"a1"}), Color::BLACK);
+    auto black = scripted({});
+    auto white = scripted({"c1"});
+    ScriptedPlayer* black_ptr = black.get();
+    ScriptedPlayer* white_ptr = white.get();
+
+    Game game(std::move(black), std::move(white), board);
+    EXPECT_EQ(game.run_silent(), -1);
+    EXPECT_EQ(black_ptr->calls(), 0u);
+    EXPECT_EQ(white_ptr->calls(), 1u);
+}
+
+TEST(GameRunSilent, DrawReturnsZero) {
+    // already over at 1-1: no one is asked to move
+    othello::board::Board board(
+        othello::test::squares({"a1"}), othello::test::squares({"h8"}), Color::BLACK);
+    auto black = scripted({});
+    auto white = scripted({});
+    ScriptedPlayer* black_ptr = black.get();
+    ScriptedPlayer* white_ptr = white.get();
+
+    Game game(std::move(black), std::move(white), board);
+    EXPECT_EQ(game.run_silent(), 0);
+    EXPECT_EQ(black_ptr->calls(), 0u);
+    EXPECT_EQ(white_ptr->calls(), 0u);
+}
+
+TEST(GameRunSilent, ContinuesFromGivenBoard) {
+    othello::board::Board board;
+    ASSERT_TRUE(othello::test::play(board, {"e6", "f4", "e3", "f6", "g5", "d6", "e7", "f5"}));
+    auto black = scripted({"c5"});
+    auto white = scripted({});
+    ScriptedPlayer* black_ptr = black.get();
+
+    Game game(std::move(black), std::move(white), board);
+    EXPECT_EQ(game.run_silent(), 1);
+    EXPECT_EQ(black_ptr->calls(), 1u);
+}
+
+TEST(GameRunSilent, InvalidBlackMoveThrows) {
+    // d4 is occupied
+    Game game(scripted({"d4"}), scripted({}));
+    EXPECT_THROW(game.run_silent(), std::invalid_argument);
+}
+
+TEST(GameRunSilent, InvalidWhiteMoveThrows) {
+    // c4 is legal for black, but not for white after f5
+    Game game(scripted({"f5"}), scripted({"c4"}));
+    EXPECT_THROW(game.run_silent(), std::invalid_argument);
+}
+
+// run_silent reports the same outcome that run prints.
+TEST(GameRunSilent, AgreesWithRun) {
+    Game loud(std::make_unique<FirstMovePlayer>(), std::make_unique<FirstMovePlayer>());
+    const std::string out = run_and_capture(loud);
+
+    Game quiet(std::make_unique<FirstMovePlayer>(), std::make_unique<FirstMovePlayer>());
+    const int result = quiet.run_silent();
+
+    if (contains(out, "Black wins!")) {
+        EXPECT_EQ(result, 1) << out;
+    } else if (contains(out, "White wins!")) {
+        EXPECT_EQ(result, -1) << out;
+    } else {
+        ASSERT_TRUE(contains(out, "It's a draw!")) << out;
+        EXPECT_EQ(result, 0) << out;
+    }
+}
+
+TEST(GameRunSilent, RandomGamesFinishWithValidResult) {
+    for (int i = 0; i < 50; ++i) {
+        Game game(std::make_unique<RandomPlayer>(), std::make_unique<RandomPlayer>());
+        const auto [result, out] = run_silent_and_capture(game);
+        EXPECT_TRUE(result == 1 || result == -1 || result == 0) << result;
+        EXPECT_EQ(out, "");
     }
 }

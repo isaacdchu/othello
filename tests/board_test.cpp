@@ -317,3 +317,86 @@ TEST(Board, RandomGamesMatchReferenceModel) {
     // make sure the pass branch was actually exercised
     EXPECT_GT(passes_seen, 0);
 }
+
+TEST(BoardFromState, StartingBitboardsMatchDefault) {
+    Board board(othello::board::START_BLACK, othello::board::START_WHITE, Color::BLACK);
+    EXPECT_EQ(board, Board());
+    EXPECT_EQ(board.hash(), Board().hash());
+    EXPECT_FALSE(board.game_over());
+    EXPECT_FALSE(board.last_move_caused_pass());
+    EXPECT_EQ(board.legal_moves(), squares({"d3", "c4", "f5", "e6"}));
+}
+
+TEST(BoardFromState, KeepsGivenTurn) {
+    Board board(othello::board::START_BLACK, othello::board::START_WHITE, Color::WHITE);
+    EXPECT_EQ(board.turn(), Color::WHITE);
+    EXPECT_NE(board, Board());
+    EXPECT_FALSE(board.game_over());
+    EXPECT_FALSE(board.last_move_caused_pass());
+    EXPECT_EQ(board.legal_moves(), squares({"e3", "f4", "c5", "d6"}));
+}
+
+TEST(BoardFromState, ExposesGivenDiscs) {
+    const uint64_t black = squares({"a1", "c3", "h8"});
+    const uint64_t white = squares({"b2", "g7"});
+    Board board(black, white, Color::BLACK);
+    EXPECT_EQ(board.black(), black);
+    EXPECT_EQ(board.white(), white);
+    EXPECT_EQ(board.score(), std::make_pair(3, 2));
+
+    const Grid grid = Grid::from(board);
+    EXPECT_EQ(grid.discs('B'), black);
+    EXPECT_EQ(grid.discs('W'), white);
+}
+
+// Rebuilding a mid-game board from its own state gives the same position.
+TEST(BoardFromState, RoundTripsMidGamePosition) {
+    Board played;
+    ASSERT_TRUE(play(played, {"e6", "f4", "e3", "f6"}));
+
+    Board rebuilt(played.black(), played.white(), played.turn());
+    EXPECT_EQ(rebuilt, played);
+    EXPECT_EQ(rebuilt.hash(), played.hash());
+    EXPECT_EQ(rebuilt.legal_moves(), played.legal_moves());
+    EXPECT_EQ(rebuilt.game_over(), played.game_over());
+    EXPECT_EQ(rebuilt.to_string(), played.to_string());
+}
+
+// Black is to move but cannot, so the turn passes to white.
+TEST(BoardFromState, SideWithNoMovesPasses) {
+    // black b1 cannot bracket white's corner disc; white can play c1
+    Board board(squares({"b1"}), squares({"a1"}), Color::BLACK);
+    EXPECT_EQ(board.turn(), Color::WHITE);
+    EXPECT_TRUE(board.last_move_caused_pass());
+    EXPECT_FALSE(board.game_over());
+    EXPECT_EQ(board.legal_moves(), squares({"c1"}));
+
+    // play continues normally from there, and ends the game
+    board.make_move(parse_move("c1"));
+    EXPECT_TRUE(board.game_over());
+    EXPECT_EQ(board.score(), std::make_pair(0, 3));
+}
+
+TEST(BoardFromState, NoMovesForEitherSideIsGameOver) {
+    for (Color turn : {Color::BLACK, Color::WHITE}) {
+        Board only_black(squares({"d4", "e5"}), 0, turn);
+        EXPECT_TRUE(only_black.game_over());
+        EXPECT_FALSE(only_black.last_move_caused_pass());
+        EXPECT_EQ(only_black.legal_moves(), 0u);
+
+        Board empty(0, 0, turn);
+        EXPECT_TRUE(empty.game_over());
+
+        // discs that can't reach each other
+        Board apart(squares({"a1"}), squares({"h8"}), turn);
+        EXPECT_TRUE(apart.game_over());
+        EXPECT_EQ(apart.score(), std::make_pair(1, 1));
+    }
+}
+
+TEST(BoardFromState, FullBoardIsGameOver) {
+    const uint64_t black = 0xFFFFFFFF00000000ULL;
+    Board board(black, ~black, Color::BLACK);
+    EXPECT_TRUE(board.game_over());
+    EXPECT_EQ(board.score(), std::make_pair(32, 32));
+}
