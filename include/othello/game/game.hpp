@@ -73,8 +73,7 @@ public:
         );
     }
 
-    int run_silent() {
-        // returns 1 if Black wins, -1 if White wins, 0 if it's a draw.
+    void run_silent() {
         while (!board_.game_over()) {
             if (board_.turn() == othello::Color::BLACK) {
                 uint64_t move = player_black_->get_move(board_);
@@ -90,13 +89,10 @@ public:
                 board_.make_move(move);
             }
         }
-        if (board_.score().first > board_.score().second) {
-            return 1; // Black wins
-        } else if (board_.score().first < board_.score().second) {
-            return -1; // White wins
-        } else {
-            return 0; // Draw
-        }
+    }
+
+    const othello::board::Board& board() const {
+        return board_;
     }
 };
 

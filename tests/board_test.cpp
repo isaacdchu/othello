@@ -400,3 +400,111 @@ TEST(BoardFromState, FullBoardIsGameOver) {
     EXPECT_TRUE(board.game_over());
     EXPECT_EQ(board.score(), std::make_pair(32, 32));
 }
+
+namespace {
+
+using Symmetry = Board::Symmetry;
+
+constexpr std::array<Symmetry, 7> ALL_SYMMETRIES = {
+    Symmetry::FLIP_HORIZONTAL, Symmetry::FLIP_VERTICAL,
+    Symmetry::FLIP_DIAGONAL_A1, Symmetry::FLIP_DIAGONAL_H1,
+    Symmetry::ROTATE_90, Symmetry::ROTATE_180, Symmetry::ROTATE_270,
+};
+
+// Where (row, col) lands under each symmetry, square by square.
+std::pair<int, int> map_square(int row, int col, Symmetry symmetry) {
+    switch (symmetry) {
+        case Symmetry::FLIP_HORIZONTAL: return {row, 7 - col};
+        case Symmetry::FLIP_VERTICAL: return {7 - row, col};
+        case Symmetry::FLIP_DIAGONAL_A1: return {col, row};
+        case Symmetry::FLIP_DIAGONAL_H1: return {7 - col, 7 - row};
+        case Symmetry::ROTATE_90: return {col, 7 - row};
+        case Symmetry::ROTATE_180: return {7 - row, 7 - col};
+        case Symmetry::ROTATE_270: return {7 - col, row};
+    }
+    return {row, col};
+}
+
+uint64_t naive_transform(uint64_t b, Symmetry symmetry) {
+    uint64_t result = 0;
+    for (int row = 0; row < 8; ++row) {
+        for (int col = 0; col < 8; ++col) {
+            if (b & Grid::bit(row, col)) {
+                auto [r, c] = map_square(row, col, symmetry);
+                result |= Grid::bit(r, c);
+            }
+        }
+    }
+    return result;
+}
+
+} // namespace
+
+TEST(BoardIsomorphism, MatchesSquareBySquareReference) {
+    std::mt19937_64 rng(12345);
+    for (int i = 0; i < 1000; ++i) {
+        const uint64_t black = rng();
+        const uint64_t white = rng() & ~black;
+        Board board(black, white, Color::BLACK);
+        for (Symmetry s : ALL_SYMMETRIES) {
+            Board iso = Board::isomorphism(board, s);
+            EXPECT_EQ(iso.black(), naive_transform(board.black(), s));
+            EXPECT_EQ(iso.white(), naive_transform(board.white(), s));
+        }
+    }
+}
+
+TEST(BoardIsomorphism, MapsKnownSquares) {
+    Board board(squares({"b1"}), squares({"a3"}), Color::WHITE);
+    Board h = Board::isomorphism(board, Symmetry::FLIP_HORIZONTAL);
+    EXPECT_EQ(h.black(), squares({"g1"}));
+    EXPECT_EQ(h.white(), squares({"h3"}));
+    Board r90 = Board::isomorphism(board, Symmetry::ROTATE_90);
+    EXPECT_EQ(r90.black(), squares({"h2"}));
+    EXPECT_EQ(r90.white(), squares({"f1"}));
+}
+
+TEST(BoardIsomorphism, StartingPositionSymmetries) {
+    const Board start;
+    // the opening is fixed by both diagonal reflections and the half turn
+    EXPECT_EQ(Board::isomorphism(start, Symmetry::FLIP_DIAGONAL_A1), start);
+    EXPECT_EQ(Board::isomorphism(start, Symmetry::FLIP_DIAGONAL_H1), start);
+    EXPECT_EQ(Board::isomorphism(start, Symmetry::ROTATE_180), start);
+    // the others swap the colours
+    for (Symmetry s : {Symmetry::FLIP_HORIZONTAL, Symmetry::FLIP_VERTICAL,
+                       Symmetry::ROTATE_90, Symmetry::ROTATE_270}) {
+        Board iso = Board::isomorphism(start, s);
+        EXPECT_EQ(iso.black(), start.white());
+        EXPECT_EQ(iso.white(), start.black());
+    }
+}
+
+TEST(BoardIsomorphism, PreservesTurnAndCommutesWithMoves) {
+    std::mt19937_64 rng(777);
+    for (int game = 0; game < 50; ++game) {
+        Board board;
+        while (!board.game_over()) {
+            for (Symmetry s : ALL_SYMMETRIES) {
+                Board iso = Board::isomorphism(board, s);
+                EXPECT_EQ(iso.turn(), board.turn());
+                EXPECT_EQ(iso.game_over(), board.game_over());
+                EXPECT_EQ(iso.legal_moves(), naive_transform(board.legal_moves(), s));
+            }
+            // pick a random legal move
+            uint64_t moves = board.legal_moves();
+            int skip = static_cast<int>(rng() % std::popcount(moves));
+            for (int k = 0; k < skip; ++k) {
+                moves &= moves - 1;
+            }
+            const uint64_t move = moves & -moves;
+            for (Symmetry s : ALL_SYMMETRIES) {
+                Board iso = Board::isomorphism(board, s);
+                iso.make_move(naive_transform(move, s));
+                Board next = board;
+                next.make_move(move);
+                EXPECT_EQ(iso, Board::isomorphism(next, s));
+            }
+            board.make_move(move);
+        }
+    }
+}

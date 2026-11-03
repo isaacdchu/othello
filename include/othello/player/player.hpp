@@ -12,7 +12,9 @@ class Player {
 protected:
     othello::Color color_;
 public:
-    Player() {
+    Player() :
+    color_(othello::Color::BLACK)
+    {
         // 
     }
     virtual ~Player() = default;

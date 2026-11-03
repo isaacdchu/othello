@@ -34,6 +34,16 @@ inline constexpr uint64_t FILE_A = 0x8080808080808080ULL;
 inline constexpr uint64_t FILE_H = 0x0101010101010101ULL;
 
 class Board {
+public:
+    enum class Symmetry {
+        FLIP_HORIZONTAL,
+        FLIP_VERTICAL,
+        FLIP_DIAGONAL_A1,
+        FLIP_DIAGONAL_H1,
+        ROTATE_90,
+        ROTATE_180,
+        ROTATE_270
+    };
 private:
     uint64_t black_ = 0;
     uint64_t white_ = 0;
@@ -243,6 +253,10 @@ public:
         return {black_count(), white_count()};
     }
 
+    int margin() const {
+        return (black_count() - white_count());
+    }
+
     std::string to_string() const {
         std::string result = "  a b c d e f g h\n";
         for (int row = 0; row < 8; ++row) {
@@ -265,6 +279,84 @@ public:
             result += '\n';
         }
         return result;
+    }
+
+    // Apply a symmetry of the square to a single bitboard.
+    // With a1 at the MSB, each byte is one row (row 1 in the top byte)
+    // and within a byte column a is the high bit.
+    static constexpr uint64_t transform(uint64_t b, Symmetry symmetry) {
+        switch (symmetry) {
+            case Symmetry::FLIP_HORIZONTAL: return mirror_columns(b);
+            case Symmetry::FLIP_VERTICAL: return mirror_rows(b);
+            case Symmetry::FLIP_DIAGONAL_A1: return transpose_a1h8(b);
+            case Symmetry::FLIP_DIAGONAL_H1: return transpose_h1a8(b);
+            // clockwise: transpose, then mirror columns
+            case Symmetry::ROTATE_90: return mirror_columns(transpose_a1h8(b));
+            case Symmetry::ROTATE_180: return mirror_rows(mirror_columns(b));
+            // counter-clockwise: transpose, then mirror rows
+            case Symmetry::ROTATE_270: return mirror_rows(transpose_a1h8(b));
+            default: return b;
+        }
+    }
+
+    // A board isomorphic to `board` under `symmetry`. The side to move and
+    // pass/game-over state carry over unchanged, since symmetries preserve
+    // legal moves.
+    //   FLIP_HORIZONTAL:  mirror left-right (a <-> h)
+    //   FLIP_VERTICAL:    mirror top-bottom (1 <-> 8)
+    //   FLIP_DIAGONAL_A1: reflect across the a1-h8 diagonal
+    //   FLIP_DIAGONAL_H1: reflect across the h1-a8 diagonal
+    //   ROTATE_*:         rotate clockwise by the given angle
+    static Board isomorphism(const Board& board, Symmetry symmetry) {
+        Board result = board;
+        result.black_ = transform(board.black_, symmetry);
+        result.white_ = transform(board.white_, symmetry);
+        return result;
+    }
+
+private:
+    // col -> 7 - col: reverse the bits within each byte
+    static constexpr uint64_t mirror_columns(uint64_t b) {
+        constexpr uint64_t k1 = 0x5555555555555555ULL;
+        constexpr uint64_t k2 = 0x3333333333333333ULL;
+        constexpr uint64_t k4 = 0x0F0F0F0F0F0F0F0FULL;
+        b = ((b >> 1) & k1) | ((b & k1) << 1);
+        b = ((b >> 2) & k2) | ((b & k2) << 2);
+        b = ((b >> 4) & k4) | ((b & k4) << 4);
+        return b;
+    }
+
+    // row -> 7 - row: reverse the byte order
+    static constexpr uint64_t mirror_rows(uint64_t b) {
+        return std::byteswap(b);
+    }
+
+    // (row, col) -> (col, row), via delta swaps
+    static constexpr uint64_t transpose_a1h8(uint64_t b) {
+        constexpr uint64_t k1 = 0x5500550055005500ULL;
+        constexpr uint64_t k2 = 0x3333000033330000ULL;
+        constexpr uint64_t k4 = 0x0F0F0F0F00000000ULL;
+        uint64_t t = k4 & (b ^ (b << 28));
+        b ^= t ^ (t >> 28);
+        t = k2 & (b ^ (b << 14));
+        b ^= t ^ (t >> 14);
+        t = k1 & (b ^ (b << 7));
+        b ^= t ^ (t >> 7);
+        return b;
+    }
+
+    // (row, col) -> (7 - col, 7 - row), via delta swaps
+    static constexpr uint64_t transpose_h1a8(uint64_t b) {
+        constexpr uint64_t k1 = 0xAA00AA00AA00AA00ULL;
+        constexpr uint64_t k2 = 0xCCCC0000CCCC0000ULL;
+        constexpr uint64_t k4 = 0xF0F0F0F00F0F0F0FULL;
+        uint64_t t = b ^ (b << 36);
+        b ^= k4 & (t ^ (b >> 36));
+        t = k2 & (b ^ (b << 18));
+        b ^= t ^ (t >> 18);
+        t = k1 & (b ^ (b << 9));
+        b ^= t ^ (t >> 9);
+        return b;
     }
 };
 
