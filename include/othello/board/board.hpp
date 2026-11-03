@@ -82,7 +82,17 @@ public:
     turn_(othello::Color::BLACK),
     game_over_(false)
     {
-        //
+        // Initialize the board with the starting position and black to move.
+    }
+
+    Board(uint64_t black, uint64_t white, othello::Color turn) :
+    black_(black),
+    white_(white),
+    turn_(turn),
+    game_over_(false),
+    passed_(false)
+    {
+        // Initialize the board with the given position and turn.
     }
 
     // Two boards are equal when they hold the same position: the same discs
